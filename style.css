@@ -1,0 +1,205 @@
+from flask import Flask, render_template, request
+import os
+import pytesseract
+from PIL import Image
+from PyPDF2 import PdfReader
+from docx import Document
+
+app = Flask(__name__)
+
+UPLOAD_FOLDER = "uploads"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Tesseract OCR location
+# Change this path if Tesseract is installed somewhere else
+if os.path.exists(r"C:\Program Files\Tesseract-OCR\tesseract.exe"):
+    pytesseract.pytesseract.tesseract_cmd = (
+        r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    )
+
+
+# Extract text from resume
+def extract_text(file_path):
+
+    extension = file_path.lower().split(".")[-1]
+
+    # JPG / JPEG / PNG
+    if extension in ["jpg", "jpeg", "png"]:
+
+        image = Image.open(file_path)
+        text = pytesseract.image_to_string(image)
+
+        return text
+
+    # PDF
+    elif extension == "pdf":
+
+        text = ""
+
+        reader = PdfReader(file_path)
+
+        for page in reader.pages:
+
+            page_text = page.extract_text()
+
+            if page_text:
+                text += page_text
+
+        return text
+
+    # DOCX
+    elif extension == "docx":
+
+        document = Document(file_path)
+
+        text = "\n".join(
+            paragraph.text
+            for paragraph in document.paragraphs
+        )
+
+        return text
+
+    else:
+        return ""
+
+
+# Job skills
+JOB_SKILLS = {
+
+    "Machine Learning Engineer": [
+        "python",
+        "machine learning",
+        "tensorflow",
+        "pytorch",
+        "scikit-learn"
+    ],
+
+    "Web Developer": [
+        "html",
+        "css",
+        "javascript",
+        "react",
+        "python",
+        "flask"
+    ],
+
+    "Software Developer": [
+        "python",
+        "java",
+        "c++",
+        "sql",
+        "git",
+        "api"
+    ],
+
+    "Data Analyst": [
+        "python",
+        "sql",
+        "excel",
+        "pandas",
+        "numpy",
+        "power bi"
+    ],
+
+    "Data Scientist": [
+        "python",
+        "machine learning",
+        "pandas",
+        "numpy",
+        "sql",
+        "statistics"
+    ]
+}
+
+
+# Home page
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+
+# Resume screening
+@app.route("/screen", methods=["POST"])
+def screen_resume():
+
+    resume = request.files.get("resume")
+
+    job_role = request.form.get("job_role")
+    experience = request.form.get("experience")
+
+    # Check resume
+    if not resume or resume.filename == "":
+        return "Please upload a resume."
+
+    # Save resume
+    file_path = os.path.join(
+        app.config["UPLOAD_FOLDER"],
+        resume.filename
+    )
+
+    resume.save(file_path)
+
+    # Extract resume text
+    resume_text = extract_text(file_path)
+    resume_text_lower = resume_text.lower()
+
+    # Get required skills
+    required_skills = JOB_SKILLS.get(job_role, [])
+
+    # Find matched and missing skills
+    matched_skills = []
+    missing_skills = []
+
+    for skill in required_skills:
+
+        if skill.lower() in resume_text_lower:
+            matched_skills.append(skill)
+        else:
+            missing_skills.append(skill)
+
+    # Calculate match score
+    if len(required_skills) > 0:
+
+        score = int(
+            len(matched_skills)
+            / len(required_skills)
+            * 100
+        )
+
+    else:
+        score = 0
+
+    # Recommendation
+    if score >= 70:
+
+        recommendation = "Strong candidate for this role."
+        status = "RECOMMENDED"
+
+    elif score >= 40:
+
+        recommendation = "Candidate needs improvement in some required skills."
+        status = "CONSIDER"
+
+    else:
+
+        recommendation = "Candidate does not match the required skills."
+        status = "NOT RECOMMENDED"
+
+    return render_template(
+        "result.html",
+        filename=resume.filename,
+        job_role=job_role,
+        experience=experience,
+        score=score,
+        matched_skills=matched_skills,
+        missing_skills=missing_skills,
+        recommendation=recommendation,
+        status=status
+    )
+
+
+# Run application
+if __name__ == "__main__":
+    app.run(debug=True)

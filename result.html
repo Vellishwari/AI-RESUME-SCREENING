@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>AI Screening Result</title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(
+                135deg,
+                #eef2ff,
+                #f8fafc
+            );
+            color: #1e293b;
+        }
+
+        .navbar {
+            height: 70px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 50px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            color: #4f46e5;
+        }
+
+        .nav-right {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 45px auto;
+            padding: 0 25px;
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title h1 {
+            margin-bottom: 10px;
+            color: #0f172a;
+        }
+
+        .title p {
+            color: #64748b;
+        }
+
+        .main-card {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.08);
+        }
+
+        .candidate {
+            padding-bottom: 25px;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 25px;
+        }
+
+        .candidate h2 {
+            margin-bottom: 12px;
+        }
+
+        .candidate p {
+            margin: 7px 0;
+            color: #475569;
+        }
+
+        .score-box {
+            text-align: center;
+            padding: 25px;
+            background: #eef2ff;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+
+        .score {
+            font-size: 55px;
+            font-weight: bold;
+            color: #4f46e5;
+        }
+
+        .score-label {
+            color: #64748b;
+            margin-top: 5px;
+        }
+
+        .sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .section {
+            padding: 25px;
+            border-radius: 15px;
+            background: #f8fafc;
+        }
+
+        .section h3 {
+            margin-bottom: 15px;
+        }
+
+        .skill {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 13px;
+        }
+
+        .matched {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .missing {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .recommendation {
+            margin-top: 25px;
+            padding: 25px;
+            text-align: center;
+            background: #eef2ff;
+            border-radius: 15px;
+        }
+
+        .recommendation h2 {
+            margin-bottom: 10px;
+            color: #4f46e5;
+        }
+
+        .recommendation p {
+            color: #475569;
+        }
+
+        .status {
+            font-size: 25px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .back-btn {
+            display: block;
+            width: 220px;
+            margin: 30px auto 0;
+            padding: 13px;
+            text-align: center;
+            text-decoration: none;
+            background: #4f46e5;
+            color: white;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .back-btn:hover {
+            background: #4338ca;
+        }
+
+        @media (max-width: 700px) {
+
+            .sections {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar {
+                padding: 0 20px;
+            }
+
+            .main-card {
+                padding: 25px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+
+    <nav class="navbar">
+
+        <div class="logo">
+            AI Resume Screening
+        </div>
+
+        <div class="nav-right">
+            AI Recruitment System
+        </div>
+
+    </nav>
+
+
+    <div class="container">
+
+
+        <div class="title">
+
+            <h1>
+                AI Resume Screening Result
+            </h1>
+
+            <p>
+                Intelligent resume analysis and candidate evaluation
+            </p>
+
+        </div>
+
+
+        <div class="main-card">
+
+
+            <!-- Candidate Information -->
+
+            <div class="candidate">
+
+                <h2>
+                    👤 Candidate Information
+                </h2>
+
+                <p>
+                    <strong>Resume:</strong>
+                    {{ filename }}
+                </p>
+
+                <p>
+                    <strong>Job Role:</strong>
+                    {{ job_role }}
+                </p>
+
+                <p>
+                    <strong>Experience:</strong>
+                    {{ experience }}
+                </p>
+
+            </div>
+
+
+            <!-- Score -->
+
+            <div class="score-box">
+
+                <div class="score">
+                    {{ score }}%
+                </div>
+
+                <div class="score-label">
+                    Resume Match Score
+                </div>
+
+            </div>
+
+
+            <!-- Skills -->
+
+            <div class="sections">
+
+
+                <!-- Matched Skills -->
+
+                <div class="section">
+
+                    <h3>
+                        ✅ Matched Skills
+                    </h3>
+
+                    {% if matched_skills %}
+
+                        {% for skill in matched_skills %}
+
+                            <span class="skill matched">
+                                {{ skill }}
+                            </span>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <p>
+                            No matching skills found.
+                        </p>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- Missing Skills -->
+
+                <div class="section">
+
+                    <h3>
+                        ❌ Missing Skills
+                    </h3>
+
+                    {% if missing_skills %}
+
+                        {% for skill in missing_skills %}
+
+                            <span class="skill missing">
+                                {{ skill }}
+                            </span>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <p>
+                            No missing skills.
+                        </p>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- Recommendation -->
+
+            <div class="recommendation">
+
+                <div class="status">
+                    {{ status }}
+                </div>
+
+                <h2>
+                    Recommendation
+                </h2>
+
+                <p>
+                    {{ recommendation }}
+                </p>
+
+            </div>
+
+
+            <a href="/" class="back-btn">
+                ← Screen Another Resume
+            </a>
+
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
